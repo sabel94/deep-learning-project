@@ -1,1 +1,1 @@
-Put the trained model in this directory to use it when continuing training.
+Place the "model.h5" file in this directory to continue training on an existing model.
