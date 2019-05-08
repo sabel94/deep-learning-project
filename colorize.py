@@ -34,18 +34,17 @@ ground_truth_test_data_path = "output/ground_truth_test_data/"
 grayscale_test_data_path = "output/grayscale_test_data/"
 colorized_test_data_path = "output/colorized_test_data/"
 #Parameters.
-batch_size = 20
-num_epochs = 25
+batch_size = 40
+num_epochs = 50
 learning_rate = 0.005
-l2_regularization_lambda = 0.001
 
 
 #Load existing model (if possible).
 def load_existing_model():
     model = None
     model_directory = os.listdir(model_input_path)
-    if len(model_directory) > 0:
-        model_filename = model_directory[-1]
+    if len(model_directory) > 1:
+        model_filename = "model.h5"
         model = load_model(model_input_path+model_filename)
     return model
 
@@ -63,80 +62,80 @@ def get_model():
         #Conv1.
         conv1 = Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(visible)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(visible)
         conv1 = Activation("relu")(conv1)
         conv1 = BatchNormalization()(conv1)
 
         #Conv2.
         conv2 = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv1)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv1)
         conv2 = Activation("relu")(conv2)
         conv2 = BatchNormalization()(conv2)
 
         #Conv3.
         conv3 = Conv2D(filters=128, kernel_size=(3, 3), strides=(2, 2),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv2)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv2)
         conv3 = Activation("relu")(conv3)
         conv3 = BatchNormalization()(conv3)
 
         #Conv4.
         conv4 = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv3)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv3)
         conv4 = Activation("relu")(conv4)
         conv4 = BatchNormalization()(conv4)
 
         #Conv5.
         conv5 = Conv2D(filters=256, kernel_size=(3, 3), strides=(2, 2),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv4)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv4)
         conv5 = Activation("relu")(conv5)
         conv5 = BatchNormalization()(conv5)
 
         #Conv6.
         conv6 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv5)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv5)
         conv6 = Activation("relu")(conv6)
         conv6 = BatchNormalization()(conv6)
 
         #Conv7.
         conv7 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
                        padding="same", dilation_rate=(2, 2), use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv6)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv6)
         conv7 = Activation("relu")(conv7)
         conv7 = BatchNormalization()(conv7)
 
         #Conv8.
         conv8 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
                        padding="same", dilation_rate=(2, 2), use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv7)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv7)
         conv8 = Activation("relu")(conv8)
         conv8 = BatchNormalization()(conv8)
 
         #Conv9.
         conv9 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
                        padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=l2(l=l2_regularization_lambda))(conv8)
+                       kernel_initializer="he_normal",
+                       bias_initializer="zeros")(conv8)
         conv9 = Activation("relu")(conv9)
         conv9 = BatchNormalization()(conv9)
 
         #Conv10.
         conv10 = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1),
                         padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=l2(l=l2_regularization_lambda))(conv9)
+                        kernel_initializer="he_normal",
+                        bias_initializer="zeros")(conv9)
         conv10 = Activation("relu")(conv10)
         conv10 = BatchNormalization()(conv10)
         conv10 = UpSampling2D(size=(2, 2))(conv10)
@@ -144,16 +143,16 @@ def get_model():
         #Conv11.
         conv11 = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1),
                         padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=l2(l=l2_regularization_lambda))(conv10)
+                        kernel_initializer="he_normal",
+                        bias_initializer="zeros")(conv10)
         conv11 = Activation("relu")(conv11)
         conv11 = BatchNormalization()(conv11)
 
         #Conv12.
         conv12 = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1),
                         padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=l2(l=l2_regularization_lambda))(conv11)
+                        kernel_initializer="he_normal",
+                        bias_initializer="zeros")(conv11)
         conv12 = Activation("relu")(conv12)
         conv12 = BatchNormalization()(conv12)
         conv12 = UpSampling2D(size=(2, 2))(conv12)
@@ -161,8 +160,8 @@ def get_model():
         #Conv13.
         conv13 = Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1),
                         padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=l2(l=l2_regularization_lambda))(conv12)
+                        kernel_initializer="he_normal",
+                        bias_initializer="zeros")(conv12)
         conv13 = Activation("relu")(conv13)
         conv13 = BatchNormalization()(conv13)
 
@@ -209,7 +208,9 @@ def get_samples(datagen, data_path, shuffle):
         X_batch = X_batch[..., np.newaxis] #Shape: (batch_size, height, width, 1).
         #Targets: a and b color channels for the images (channel 1 and 2).
         Y_batch = batch[:, :, :, 1:]
-        #Change Lab color space interval from [-128, 128] to [-1, 1].
+        #Change Lab color space L channel interval from [0, 100] to [0, 1].
+        X_batch = X_batch / 100
+        #Change Lab color space a and b channel interval from [-128, 127] to [-1, 127/128].
         Y_batch = Y_batch / 128
         yield (X_batch, Y_batch)
 
@@ -240,7 +241,7 @@ def save_history(history, using_existing_model):
     #i.e. if training has been continued using an existing model.
     if using_existing_model:
         history_directory = os.listdir(history_input_path)
-        if len(history_directory) > 0:
+        if len(history_directory) > 1:
             prev_history_dict = json.load(open(history_input_path+
                                                "history.json", 'r'))
             for key in history_dict:
@@ -250,7 +251,7 @@ def save_history(history, using_existing_model):
 #Plot the training and validation loss for each training epoch.
 def plot_loss():
     history_directory = os.listdir(history_output_path)
-    if len(history_directory) > 0:
+    if len(history_directory) > 1:
         history_dict = json.load(open(history_output_path+"history.json", 'r'))
         training_loss = history_dict["loss"]
         validation_loss = history_dict["val_loss"]
@@ -293,6 +294,7 @@ def save_images_to_directory(X_batch, Y_batch_predicted, Y_batch_true, batch_ind
 
 #Make predictions for unseen grayscale images (test data set).
 def test_model(model, testing_datagen):
+    error = 0
     num_testing_samples = len(os.listdir(testing_path+"testing/"))
     testing_batch_size = min(num_testing_samples, 100)
     num_testing_batches = int(np.ceil(num_testing_samples / testing_batch_size))
@@ -306,11 +308,14 @@ def test_model(model, testing_datagen):
         batch = color.rgb2lab(batch)
         X_batch = batch[:, :, :, 0]
         X_batch = X_batch[..., np.newaxis]
-        Y_batch_predicted = model.predict(X_batch) * 128
+        Y_batch_predicted = model.predict(X_batch / 100) * 128
         Y_batch_true = batch[:, :, :, 1:]
         save_images_to_directory(X_batch, Y_batch_predicted,
                                  Y_batch_true, batch_index)
+        error = error + model.evaluate(X_batch / 100, Y_batch_true / 128) * len(X_batch)
         if (batch_index == num_testing_batches - 1):
+            mse = error / num_testing_samples
+            print("mse (test data): " + str(mse))
             return
         batch_index = batch_index + 1
 
