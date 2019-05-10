@@ -5,6 +5,7 @@ from config import (image_height, image_width, training_path, validation_path,
                     model_output_path, batch_size, num_epochs, learning_rate)
 from data_generator import get_samples
 from helpers import save_history
+from keras.optimizers import Adam
 import os
 import numpy as np
 
