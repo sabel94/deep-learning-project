@@ -10,7 +10,7 @@ import numpy as np
 
 
 #Train the network.
-def train_model(model, using_existing_model,training_datagen, validation_datagen):
+def train_model(model, using_existing_model, training_datagen, validation_datagen):
     if not using_existing_model:
         optimizer = Adam(lr=learning_rate)
         model.compile(loss="mse", optimizer=optimizer)
