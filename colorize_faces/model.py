@@ -37,7 +37,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(visible)
         conv1 = Activation("relu")(conv1)
-        conv1 = BatchNormalization()(conv1)
+        conv1 = BatchNormalization(axis=3)(conv1)
 
         #Conv2.
         conv2 = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1),
@@ -45,7 +45,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv1)
         conv2 = Activation("relu")(conv2)
-        conv2 = BatchNormalization()(conv2)
+        conv2 = BatchNormalization(axis=3)(conv2)
 
         #Conv3.
         conv3 = Conv2D(filters=128, kernel_size=(3, 3), strides=(2, 2),
@@ -53,7 +53,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv2)
         conv3 = Activation("relu")(conv3)
-        conv3 = BatchNormalization()(conv3)
+        conv3 = BatchNormalization(axis=3)(conv3)
 
         #Conv4.
         conv4 = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1),
@@ -61,7 +61,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv3)
         conv4 = Activation("relu")(conv4)
-        conv4 = BatchNormalization()(conv4)
+        conv4 = BatchNormalization(axis=3)(conv4)
 
         #Conv5.
         conv5 = Conv2D(filters=256, kernel_size=(3, 3), strides=(2, 2),
@@ -69,7 +69,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv4)
         conv5 = Activation("relu")(conv5)
-        conv5 = BatchNormalization()(conv5)
+        conv5 = BatchNormalization(axis=3)(conv5)
 
         #Conv6.
         conv6 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
@@ -77,7 +77,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv5)
         conv6 = Activation("relu")(conv6)
-        conv6 = BatchNormalization()(conv6)
+        conv6 = BatchNormalization(axis=3)(conv6)
 
         #Conv7.
         conv7 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
@@ -85,7 +85,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv6)
         conv7 = Activation("relu")(conv7)
-        conv7 = BatchNormalization()(conv7)
+        conv7 = BatchNormalization(axis=3)(conv7)
 
         #Conv8.
         conv8 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
@@ -93,7 +93,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv7)
         conv8 = Activation("relu")(conv8)
-        conv8 = BatchNormalization()(conv8)
+        conv8 = BatchNormalization(axis=3)(conv8)
 
         #Conv9.
         conv9 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
@@ -101,7 +101,7 @@ def get_model():
                        kernel_initializer="he_normal",
                        bias_initializer="zeros")(conv8)
         conv9 = Activation("relu")(conv9)
-        conv9 = BatchNormalization()(conv9)
+        conv9 = BatchNormalization(axis=3)(conv9)
 
         #Conv10.
         conv10 = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1),
@@ -109,7 +109,7 @@ def get_model():
                         kernel_initializer="he_normal",
                         bias_initializer="zeros")(conv9)
         conv10 = Activation("relu")(conv10)
-        conv10 = BatchNormalization()(conv10)
+        conv10 = BatchNormalization(axis=3)(conv10)
         conv10 = UpSampling2D(size=(2, 2))(conv10)
 
         #Conv11.
@@ -118,7 +118,7 @@ def get_model():
                         kernel_initializer="he_normal",
                         bias_initializer="zeros")(conv10)
         conv11 = Activation("relu")(conv11)
-        conv11 = BatchNormalization()(conv11)
+        conv11 = BatchNormalization(axis=3)(conv11)
 
         #Conv12.
         conv12 = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1),
@@ -126,7 +126,7 @@ def get_model():
                         kernel_initializer="he_normal",
                         bias_initializer="zeros")(conv11)
         conv12 = Activation("relu")(conv12)
-        conv12 = BatchNormalization()(conv12)
+        conv12 = BatchNormalization(axis=3)(conv12)
         conv12 = UpSampling2D(size=(2, 2))(conv12)
 
         #Conv13.
@@ -135,7 +135,7 @@ def get_model():
                         kernel_initializer="he_normal",
                         bias_initializer="zeros")(conv12)
         conv13 = Activation("relu")(conv13)
-        conv13 = BatchNormalization()(conv13)
+        conv13 = BatchNormalization(axis=3)(conv13)
 
         #Output.
         output = Conv2D(filters=2, kernel_size=(3, 3), strides=(1, 1),
