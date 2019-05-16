@@ -5,18 +5,18 @@ __author__ = "Johan Sabel, Felix Büttner, Joel Ekelöf"
 image_height = 256
 image_width = 256
 #Input paths.
-model_input_path = "drive/My Drive/faces4/input/model/"
-history_input_path = "drive/My Drive/faces4/input/history/"
-training_path = "drive/My Drive/faces4/input/datasets/training/"
-validation_path = "drive/My Drive/faces4/input/datasets/validation/"
-testing_path = "drive/My Drive/faces4/input/datasets/testing/"
+model_input_path = "input/model/"
+history_input_path = "input/history/"
+training_path = "input/datasets/training/"
+validation_path = "input/datasets/validation/"
+testing_path = "input/datasets/testing/"
 #Output paths.
-model_output_path = "drive/My Drive/faces4/output/model/"
-history_output_path = "drive/My Drive/faces4/output/history/"
-loss_plot_path = "drive/My Drive/faces4/output/loss_plot/"
-ground_truth_test_data_path = "drive/My Drive/faces4/output/ground_truth_test_data/"
-grayscale_test_data_path = "drive/My Drive/faces4/output/grayscale_test_data/"
-colorized_test_data_path = "drive/My Drive/faces4/output/colorized_test_data/"
+model_output_path = "output/model/"
+history_output_path = "output/history/"
+loss_plot_path = "output/loss_plot/"
+ground_truth_test_data_path = "output/ground_truth_test_data/"
+grayscale_test_data_path = "output/grayscale_test_data/"
+colorized_test_data_path = "output/colorized_test_data/"
 #Parameters.
 batch_size = 32
 num_epochs = 100
