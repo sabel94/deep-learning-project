@@ -1,3 +1,5 @@
+__author__ = "Johan Sabel, Felix Büttner, Joel Ekelöf"
+
 import numpy as np
 
 num_values = 10
