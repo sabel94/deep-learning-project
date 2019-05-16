@@ -5,13 +5,14 @@ import numpy as np
 
 
 num_values = 10
-min_value = 0
-max_value = 1
+min_log_exp = -5
+max_log_exp = -1
 
 def get_parameter_values(min_value, max_value):
     values = []
     for i in range(num_values):
-        value = min_value + (max_value - min_value) * np.random.rand()
+        exp = min_value + (max_value - min_value) * np.random.rand()
+        value = 10**exp
         values.append(value)
     return values
         
