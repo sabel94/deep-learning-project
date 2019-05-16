@@ -25,6 +25,7 @@ l2_regularization_lambda = 0.0005
 dropout_rate = 0.1
 early_stopping_patience = 20
 #Settings.
+accuracy_epsilon = 0.02
 using_l2_regularization = False
 using_dropout = False
 using_early_stopping = False

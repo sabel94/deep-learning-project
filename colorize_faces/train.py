@@ -4,6 +4,7 @@ __author__ = "Johan Sabel, Felix Büttner, Joel Ekelöf"
 from config import (image_height, image_width, training_path, validation_path,
                     model_output_path, batch_size, num_epochs, learning_rate,
                     using_early_stopping, early_stopping_patience)
+from accuracy_measure import accuracy
 from data_generator import get_samples
 from helpers import save_history
 from keras.optimizers import Adam
@@ -16,7 +17,8 @@ import numpy as np
 def train_model(model, using_existing_model, training_datagen, validation_datagen):
     if not using_existing_model:
         optimizer = Adam(lr=learning_rate)
-        model.compile(loss="mse", optimizer=optimizer)
+        model.compile(loss="mse", optimizer=optimizer,
+                      metrics=[accuracy])
     num_training_samples = len(os.listdir(training_path+"training/"))
     num_steps_per_epoch = np.ceil(num_training_samples / batch_size)
     num_validation_samples = len(os.listdir(validation_path+"validation/"))
