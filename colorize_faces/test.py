@@ -28,7 +28,7 @@ def test_model(model, testing_datagen):
         Y_batch_true = batch[:, :, :, 1:]
         save_images_to_directory(X_batch, Y_batch_predicted,
                                  Y_batch_true, batch_index)
-        error = error + model.evaluate(X_batch / 100, Y_batch_true / 128) * len(X_batch)
+        error = error + model.evaluate(X_batch / 100, Y_batch_true / 128)[0] * len(X_batch)
         if (batch_index == num_testing_batches - 1):
             mse = error / num_testing_samples
             print("mse (test data): " + str(mse))
