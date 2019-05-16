@@ -11,13 +11,13 @@ from skimage import color
 #Get training image generator (image augmentation).
 def get_image_generator(dataset):
     if dataset == "training":
-        datagen = ImageDataGenerator(rescale=1/255,
+        datagen = ImageDataGenerator(rescale=1./255,
                                      rotation_range=20,
                                      shear_range=0.3,
                                      zoom_range=0.3,
                                      horizontal_flip=True)
     elif dataset == "validation" or dataset == "testing":
-        datagen = ImageDataGenerator(rescale=1/255)
+        datagen = ImageDataGenerator(rescale=1./255)
     return datagen
 
 #Get batches of training samples.
