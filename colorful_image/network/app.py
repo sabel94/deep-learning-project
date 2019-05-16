@@ -32,7 +32,8 @@ def main():
     model = models.get_model(c_data)
 
     # The file prior_probs contains the general probability of occurence for 
-    # each of the Q ab bins
+    # each of the Q ab bins. Note that the probabilities are already smoothed 
+    # with a Gaussian kernel.
     prior_probs = np.load(c_data['dir']['prior_probs']) # (Q=313,)
 
     # Compile model

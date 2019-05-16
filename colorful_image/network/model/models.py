@@ -186,12 +186,12 @@ def compile_model(model, prior_probs, params):
     """Configure the model for training.
 
     Input:
-        model:          a
+        model:          Instance of Keras model class
         prior_probs:    Smoothed empirical distribution of colors
         params:         Needed parameters like lambda
 
     Return:
-        model:  a
+        model:  Instance of Keras model class
     """
     # Set optimizer
     learning_rate = params['learning_rate']
