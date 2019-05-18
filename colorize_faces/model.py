@@ -7,11 +7,97 @@ from config import (image_height, image_width, model_input_path, batch_size,
 import os
 from keras.models import Model, load_model
 from keras.layers import (Input, Conv2D, BatchNormalization, Activation,
-                          Dropout, UpSampling2D, Conv2DTranspose)
+                          Dropout, UpSampling2D, Conv2DTranspose, MaxPooling2D,Add)
 from keras.regularizers import l2
 from keras.utils import plot_model
 import scipy.misc
 
+def normal_block(input,filterSize):
+  layer = Conv2D(filters=filterSize, kernel_size=(3, 3), strides=(1, 1),
+                  padding="same", use_bias=True,
+                  kernel_initializer="he_normal", bias_initializer="zeros")(input)
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+  return layer
+
+def upsampling_block(input, filterSize):
+  layer = Conv2D(filters=filterSize, kernel_size=(3, 3), strides=(1, 1),
+                  padding="same", use_bias=True,
+                  kernel_initializer="he_normal", bias_initializer="zeros")(input)
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+  layer = Conv2DTranspose(filters = filterSize, kernel_size = (3,3), strides = (2,2),
+          padding = "same", name = ("Transpose" + str(filterSize)))(layer)
+
+  return layer
+
+def downsample_block(input,filterSizes):
+
+  #shortcut here need an extra layer, since it has the wrong dimensions and needs to be downsampled
+  identity = input
+  identity = Conv2D(filters = filterSizes[2], kernel_size = (1,1),
+              strides = (2,2), padding = "same")(identity)
+
+  #first block (notice stride = 2, to downsample.)
+  layer = Conv2D(filters = filterSizes[0], kernel_size = (1,1),
+                 strides = (2,2), padding = "same", use_bias = True,
+                 kernel_initializer = "he_normal", bias_initializer = "zeros")(input)
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+  #second block
+  layer = Conv2D(filters = filterSizes[1], kernel_size = (3,3),
+                 strides = (1,1), padding = "same", use_bias = True,
+                 kernel_initializer = "he_normal", bias_initializer = "zeros")(layer)
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+  #third block
+  layer = Conv2D(filters = filterSizes[2], kernel_size = (1,1),
+                 strides = (1,1), padding = "same", use_bias = True,
+                 kernel_initializer = "he_normal", bias_initializer = "zeros")(layer)
+
+  #shortcut
+  layer = Add()([identity,layer])
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+  return layer
+
+  #code for the resnet inspired by https://arxiv.org/pdf/1512.03385.pdf and https://engmrk.com/residual-networks-resnets/
+
+def same_size_block(input, filterSizes):
+
+  #save identity to be added in the end
+  identity = input
+
+  #first block
+  layer = Conv2D(filters = filterSizes[0], kernel_size = (1,1),
+                 strides = (1,1), padding = "same", use_bias = True,
+                 kernel_initializer = "he_normal", bias_initializer = "zeros")(input)
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+
+  #second block
+  layer = Conv2D(filters = filterSizes[1], kernel_size = (3,3),
+                 strides = (1,1), padding = "same", use_bias = True,
+                 kernel_initializer = "he_normal", bias_initializer = "zeros")(layer)
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+  #third block
+  layer = Conv2D(filters = filterSizes[2], kernel_size = (1,1),
+                 strides = (1,1), padding = "same", use_bias = True,
+                 kernel_initializer = "he_normal", bias_initializer = "zeros")(layer)
+
+  #shortcut
+  layer = Add()([layer,identity])
+  layer = Activation("relu")(layer)
+  layer = BatchNormalization()(layer)
+
+  return layer
 
 #Load existing model (if possible).
 def load_existing_model():
@@ -35,151 +121,61 @@ def get_model():
             kernel_regularizer = l2(l=l2_regularization_lambda)
 
         #Input: Grayscale image (lab color space).
-        visible = Input(shape=(image_height, image_width, 1))
+        inputLayer = Input(shape=(image_height,image_width,1), name = "Input")
 
-        #Conv1.
-        conv1 = Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2),
+        conv1 = Conv2D(filters=64, kernel_size=(7, 7), strides=(2, 2),
                        padding="same", use_bias=True,
                        kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(visible)
-        conv1 = Activation("relu")(conv1)
-        if using_dropout:
-            conv1 = Dropout(rate=dropout_rate)(conv1)
-        conv1 = BatchNormalization(axis=3)(conv1)
+                       name = "1-7x7")(inputLayer)
+        conv1 = Activation("relu", name = "1-relu")(conv1)
+        conv1 = BatchNormalization(name = "1-batchNorm")(conv1)
 
-        #Conv2.
-        conv2 = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1),
-                       padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv1)
-        conv2 = Activation("relu")(conv2)
-        if using_dropout:
-            conv2 = Dropout(rate=dropout_rate)(conv2)
-        conv2 = BatchNormalization(axis=3)(conv2)
+        pool = MaxPooling2D((3,3),strides = 2, name = "2-pool")(conv1)
 
-        #Conv3.
-        conv3 = Conv2D(filters=128, kernel_size=(3, 3), strides=(2, 2),
-                       padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv2)
-        conv3 = Activation("relu")(conv3)
-        if using_dropout:
-            conv3 = Dropout(rate=dropout_rate)(conv3)
-        conv3 = BatchNormalization(axis=3)(conv3)
+        L2 = downsample_block(pool,[64,64,256])
+        L2 = same_size_block(L2,[64,64,256])
+        L2 = same_size_block(L2,[64,64,256])
 
-        #Conv4.
-        conv4 = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1),
-                       padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv3)
-        conv4 = Activation("relu")(conv4)
-        if using_dropout:
-            conv4 = Dropout(rate=dropout_rate)(conv4)
-        conv4 = BatchNormalization(axis=3)(conv4)
+        L3 = downsample_block(L2,[128,128,512])
+        L3 = same_size_block(L3,[128,128,512])
+        L3 = same_size_block(L3,[128,128,512])
+        L3 = same_size_block(L3,[128,128,512])
 
-        #Conv5.
-        conv5 = Conv2D(filters=256, kernel_size=(3, 3), strides=(2, 2),
-                       padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv4)
-        conv5 = Activation("relu")(conv5)
-        if using_dropout:
-            conv5 = Dropout(rate=dropout_rate)(conv5)
-        conv5 = BatchNormalization(axis=3)(conv5)
+        L4 = downsample_block(L3,[256,256,1024])
+        L4 = same_size_block(L4,[256,256,1024])
+        L4 = same_size_block(L4,[256,256,1024])
+        L4 = same_size_block(L4,[256,256,1024])
+        L4 = same_size_block(L4,[256,256,1024])
+        L4 = same_size_block(L4,[256,256,1024])
 
-        #Conv6.
-        conv6 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
-                       padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv5)
-        conv6 = Activation("relu")(conv6)
-        if using_dropout:
-            conv6 = Dropout(rate=dropout_rate)(conv6)
-        conv6 = BatchNormalization(axis=3)(conv6)
+        L5 = downsample_block(L4, [512,512,2048])
+        L5 = same_size_block(L5, [512,512,2048])
+        L5 = same_size_block(L5, [512,512,2048])
 
-        #Conv7.
-        conv7 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
-                       padding="same", dilation_rate=(2, 2), use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv6)
-        conv7 = Activation("relu")(conv7)
-        if using_dropout:
-            conv7 = Dropout(rate=dropout_rate)(conv7)
-        conv7 = BatchNormalization(axis=3)(conv7)
+        #we have 6 downsamples (first thing, maxpool, 4 downsamples (L2,L3,L4,L5))
+        #so have to have 6 upsamples
 
-        #Conv8.
-        conv8 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
-                       padding="same", dilation_rate=(2, 2), use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv7)
-        conv8 = Activation("relu")(conv8)
-        if using_dropout:
-            conv8 = Dropout(rate=dropout_rate)(conv8)
-        conv8 = BatchNormalization(axis=3)(conv8)
+        up = upsampling_block(L5,2048)#1
+        up = normal_block(up,1024)
+        up = upsampling_block(up,512)#2
+        up = normal_block(up,256)
+        up = upsampling_block(up,128)#3
+        up = normal_block(up,64)
+        up = upsampling_block(up,32)#4
 
-        #Conv9.
-        conv9 = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1),
-                       padding="same", use_bias=True,
-                       kernel_initializer="he_normal", bias_initializer="zeros",
-                       kernel_regularizer=kernel_regularizer)(conv8)
-        conv9 = Activation("relu")(conv9)
-        if using_dropout:
-            conv9 = Dropout(rate=dropout_rate)(conv9)
-        conv9 = BatchNormalization(axis=3)(conv9)
-
-        #Conv10.
-        conv10 = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1),
-                        padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=kernel_regularizer)(conv9)
-        conv10 = Activation("relu")(conv10)
-        if using_dropout:
-            conv10 = Dropout(rate=dropout_rate)(conv10)
-        conv10 = BatchNormalization(axis=3)(conv10)
-        conv10 = UpSampling2D(size=(2, 2))(conv10)
-
-        #Conv11.
-        conv11 = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1),
-                        padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=kernel_regularizer)(conv10)
-        conv11 = Activation("relu")(conv11)
-        if using_dropout:
-            conv11 = Dropout(rate=dropout_rate)(conv11)
-        conv11 = BatchNormalization(axis=3)(conv11)
-
-        #Conv12.
-        conv12 = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1),
-                        padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=kernel_regularizer)(conv11)
-        conv12 = Activation("relu")(conv12)
-        if using_dropout:
-            conv12 = Dropout(rate=dropout_rate)(conv12)
-        conv12 = BatchNormalization(axis=3)(conv12)
-        conv12 = UpSampling2D(size=(2, 2))(conv12)
-
-        #Conv13.
-        conv13 = Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1),
-                        padding="same", use_bias=True,
-                        kernel_initializer="he_normal", bias_initializer="zeros",
-                        kernel_regularizer=kernel_regularizer)(conv12)
-        conv13 = Activation("relu")(conv13)
-        if using_dropout:
-            conv13 = Dropout(rate=dropout_rate)(conv13)
-        conv13 = BatchNormalization(axis=3)(conv13)
 
         #Output.
         output = Conv2D(filters=2, kernel_size=(3, 3), strides=(1, 1),
                         padding="same", use_bias=True,
                         kernel_initializer="glorot_uniform",
-                        bias_initializer="zeros")(conv13)
+                        bias_initializer="zeros")(up)
         output = Activation("tanh")(output)
-        output = UpSampling2D(size=(2, 2))(output)
+        output = Conv2DTranspose(filters = 2, kernel_size = (3,3), strides = (2,2), padding = "same", name = "TransposeLast")(output)#6
 
-        model = Model(inputs=visible, outputs=output)
-    
+
+        model = Model(input = inputLayer, output = output)
+
     #Summarize layers.
-    print(model.summary())
+    # print(model.summary())
     #plot_model(model, to_file='model_plot.png')
     return model, using_existing_model
