@@ -19,7 +19,7 @@ grayscale_test_data_path = "drive/My Drive/colorize_faces/output/grayscale_test_
 colorized_test_data_path = "drive/My Drive/colorize_faces/output/colorized_test_data/"
 #Parameters.
 batch_size = 32
-num_epochs = 1
+num_epochs = 70
 learning_rate = 0.0015
 l2_regularization_lambda = 0.0005
 dropout_rate = 0.1

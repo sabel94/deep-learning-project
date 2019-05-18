@@ -162,6 +162,8 @@ def get_model():
         up = upsampling_block(up,128)#3
         up = normal_block(up,64)
         up = upsampling_block(up,32)#4
+        up = normal_block(up,16)
+        up = upsampling_block(up,8)
 
 
         #Output.
