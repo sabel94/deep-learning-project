@@ -1,16 +1,19 @@
 import os
 import numpy as np
+from keras.models import load_model
 
 from network.config import config
 from network.data import data
-from network.model import models, loss
+from network.model import models
+from network.model.loss import weighted_categorical_crossentropy_wrapper
+from network.utils import helpers
 
 
 def main():
-    """Train model. Evaluation is following. :)"""
     # Get configurations/settings
     c_data = get_configuration('data')
     c_training = get_configuration('training')
+    c_testing = get_configuration('testing')
 
     """Prepare data."""
     # The file pts_in_hull contains the ab values for Q=313 bins
@@ -22,8 +25,26 @@ def main():
     # Fit unsupervised nearest neighbors learner to pts_in_hull
     nn_learner = data.nearest_neighbors(pts_in_hull, c_data)
 
+    # Train network
+    #train([c_data, c_training], nn_learner)
+
+    # Test network
+    test([c_data, c_training, c_testing], nn_learner, pts_in_hull)
+
+
+def train(params, nn_learner):
+    """Train network.
+
+    Input:
+        params:     Needed parameters stored in [c_data, c_training]
+        nn_learner: Fitted unsupervised nearest neighbors model
+    """
+    # Parameters
+    c_data = params[0]
+    c_training = params[1]
+
+    """Continue with data preparation."""
     # Get data generator
-    params = [c_data, c_training]
     datagen_training = data.data_generator('training', nn_learner, params)
     datagen_validation = data.data_generator('validation', nn_learner, params)
 
@@ -84,6 +105,67 @@ def main():
     print("Success: Training completed")
 
 
+def test(params, nn_learner, pts_in_hull):
+    """Test network.
+    
+    Input:
+        params:         Needed parameters stored in [c_data, c_training,
+                                                     c_testing]
+        nn_learner:     Fitted unsupervised nearest neighbors model
+        pts_in_hull:    Contains the ab values for Q=313 bins, shape (Q=313, 2)
+    """
+    # Parameters
+    c_data = params[0]
+    c_training = params[1]
+    c_testing = params[2]
+
+    """Continue with data preparation."""
+    # Get data generator
+    datagen_testing = data.data_generator('testing', nn_learner, params)
+
+    """Load Model."""
+    dir_model = str(c_data['dir']['model'])
+    prior_probs = np.load(c_data['dir']['prior_probs']) # (Q=313,)
+    wccw = weighted_categorical_crossentropy_wrapper(prior_probs, c_training)
+    co = {'weighted_categorical_crossentropy': wccw}
+    model = load_model(dir_model, custom_objects=co)
+
+    # Loop through batches
+    dir_output = c_data['dir']['output']
+    index = 0
+    for batch in datagen_testing:
+        # Extract batches
+        batch_input = batch[0]      # Normalized L-channel, range [0, 1]
+        t_batch_probs = batch[1]    # Ground truth
+
+        # Predict distributions
+        p_batch_probs = model.predict(batch_input) # (batch_size, Ht, Wt, Q)
+        
+        # Map the predicted distributions to point estimates in ab space
+        batch_color_ab = data.z2y(p_batch_probs, 
+                                  pts_in_hull, 
+                                  [c_data, c_testing]
+                                  ) # (batch_size, H, W, 2)
+
+        # Denormalize input from tange [0, 1] to [0, 100] (L-channel)
+        batch_input = batch_input*100       
+        
+        # Concatenate L-channel with the ab channel
+        images_lab = np.concatenate((batch_input, batch_color_ab), axis=3)
+
+        # Save images
+        helpers.save_images(images_lab, dir_output, index)
+        
+        # Break loop when the number of total batches is reached
+        n_batches = batch[2]
+        if index == n_batches - 1:
+            return
+        else:
+            index = index + 1
+        
+    print("Success: Testing completed")
+
+
 def get_configuration(category):
     """Get all configurations for one category defined in config.json.
 
@@ -96,3 +178,4 @@ def get_configuration(category):
     c = config.var.data[category]
 
     return c
+

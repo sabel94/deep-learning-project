@@ -1,30 +1,34 @@
 {
-	"data": {
-	  "input": {
-	    "height": 256,
-  		"width": 256
-	  },
-		"truth": {
-		  "height": 64,
-  		"width": 64
-		},
-		"dir": {
-		  "training_data": "network/data/training",
-		  "validation_data": "network/data/validation",
-		  "testing_data": "network/data/testing",
-			"prior_probs": "network/data/other/prior_probs.npy",
-		  "pts_in_hull": "network/data/other/pts_in_hull.npy",
-			"model": "network/data/other/model.h5",
-			"model_weights": "network/data/other/model_weights.h5"
-		},
-		"sigma": 5,
-		"n_neighbors": 5
+  "data": {
+    "input": {
+      "height": 256,
+      "width": 256
+    },
+    "truth": {
+      "height": 64,
+      "width": 64
+    },
+    "dir": {
+      "training_data": "network/data/training",
+      "validation_data": "network/data/validation",
+      "testing_data": "network/data/testing",
+      "prior_probs": "network/data/other/prior_probs.npy",
+      "pts_in_hull": "network/data/other/pts_in_hull.npy",
+      "model": "network/data/other/model.h5",
+      "model_weights": "network/data/other/model_weights.h5",
+      "output": "network/data/output"
+    },
+    "sigma": 5,
+    "n_neighbors": 5
   },
-	"training": {
-		"load_weights": 0,
-		"n_epochs": 2,
-		"batch_size": 2,
-		"learning_rate": 0.005,
-		"lambda": 0.5
+  "training": {
+    "load_weights": 0,
+    "n_epochs": 2,
+    "batch_size": 2,
+    "learning_rate": 0.005,
+    "lambda": 0.5
+  },
+  "testing": {
+    "temperature": 0.38
   }
 }

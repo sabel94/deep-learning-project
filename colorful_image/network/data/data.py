@@ -14,7 +14,7 @@ def data_generator(dataset, nn_learner, params):
         dataset:    Defines the purpose of the generator (training, 
                     validation, or testing)
         nn_learner: Fitted unsupervised nearest neighbors model
-        params:     Needed parameters stored like [c_data, c_training]
+        params:     Needed parameters stored in [c_data, c_training]
 
     Return:
         batch_input, batch_truth:   Input and ground truth images packed in 
@@ -45,12 +45,18 @@ def data_generator(dataset, nn_learner, params):
         msg = "No images found in " + dir_data + "/images/"
         raise OSError(msg)
 
+    # Set batch size
+    if dataset == "testing":
+        batch_size = min(n_images, 100)
+    else:
+        batch_size = params[1]['batch_size']
+
+    # Total number of batches
+    n_batches = int(np.ceil(np.true_divide(n_images, batch_size)))
+
     # Get image height and width needed for the input of the network
     H = params[0]['input']['height']
     W = params[0]['input']['width']
-
-    # Get batch size
-    batch_size = params[1]['batch_size']
 
     # Define flow, which takes the path to a directory and generates batches
     flow = datagen.flow_from_directory(dir_data,
@@ -78,12 +84,15 @@ def data_generator(dataset, nn_learner, params):
         batch_probs = y2z(batch_ab, nn_learner, params[0]) # (batch_size, 
                                                            #  Ht, Wt, Q)
         # Define input batch
-        batch_input = batch_l_norm
+        batch_input = batch_l_norm # (batch_size, H, W, 1)
 
         # Define ground truth batch
-        batch_truth = batch_probs
+        batch_truth = batch_probs # (batch_size, Ht, Wt, Q)
 
-        yield (batch_input, batch_truth)
+        if dataset == "testing":
+            yield (batch_input, batch_truth, n_batches)
+        else:
+            yield (batch_input, batch_truth)
 
 
 def y2z(batch_ab, nn_learner, params):
@@ -115,7 +124,7 @@ def y2z(batch_ab, nn_learner, params):
         # Resize image to (Ht, Wt, 2) if necessary
         if image.shape[0] != Ht or image.shape[1] != Wt:
             image = transform.resize(image,
-                                     (Ht, Wt),
+                                     (Ht, Wt, 2),
                                      mode='constant',
                                      anti_aliasing=True
                                      )
@@ -155,6 +164,51 @@ def y2z(batch_ab, nn_learner, params):
     z_values = np.array(z_values) # (batch_size, Ht, Wt, Q)
 
     return z_values
+
+
+def z2y(p_batch_probs, pts_in_hull, params):
+    """Map the predicted distributions to point estimates in ab space.
+
+    Input:
+        p_batch_probs:  Predicted distributions (batch of Z_hat),
+                        shape (batch_size, Ht, Wt, Q=313) 
+        pts_in_hull:    Contains the ab values for Q=313 bins, shape (Q=313, 2)
+        params:         Needed parameters stored in [c_data, c_testing]
+
+    Return:
+        batch_color_ab: Point estimates in ab space (Y_hat), 
+                        shape (batch_size, H, W, 2)
+    """
+    # Parameters
+    H = params[0]['input']['height']
+    W = params[0]['input']['width']
+    T = params[1]['temperature']
+
+    # Calculate the annealed-mean of each distribution
+    num = np.power(p_batch_probs, 1.0 / T)
+    den = np.sum(np.power(p_batch_probs, 1.0 / T), axis=3)[:, :, :, np.newaxis]
+    f_T = num / den # (batch_size, Ht, Wt, Q)
+
+    # Calculate the mapping H
+    H_map = np.tensordot(f_T, pts_in_hull, axes=(3, 0)) # (batch_size, Ht, Wt, 
+                                                        #  2)
+
+    # Upscale images to (H, W, 2) if necessary
+    if H_map.shape[1] != H or H_map.shape[2] != W:
+        batch_color_ab = []
+        for image in H_map:
+            image = transform.resize(image, 
+                                     (H, W, 2), 
+                                     mode='constant', 
+                                     anti_aliasing=True
+                                     )
+            batch_color_ab.append(image)
+        # Convert to numpy array
+        batch_color_ab = np.array(batch_color_ab) # (batch_size, H, W, 2)
+    else:
+        batch_color_ab = H_map
+
+    return batch_color_ab 
 
 
 def nearest_neighbors(samples, params):

@@ -175,7 +175,8 @@ def get_model(params):
 
 
     # (a, b) probability distribution
-    outputs = Conv2D(313, (1, 1))(conv8)
+    outputs = Conv2D(filters=313, 
+                     kernel_size=(1, 1))(conv8)
     outputs = Activation(activation=softmax)(outputs)
 
     model = Model(inputs=inputs, outputs=outputs)
