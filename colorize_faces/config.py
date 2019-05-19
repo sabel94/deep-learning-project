@@ -20,8 +20,8 @@ colorized_test_data_path = "output/colorized_test_data/"
 #Parameters.
 batch_size = 32
 num_epochs = 100
-learning_rate = 0.0015
-l2_regularization_lambda = 0.0005
+learning_rate = 5.03e-4
+l2_regularization_lambda = 1.93e-5
 dropout_rate = 0.1
 early_stopping_patience = 20
 #Settings.
